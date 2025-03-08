@@ -36,7 +36,7 @@ for (i in 1:nrow(stations)) {
   station_name <- gsub(" ", "_", stations$station_name[i])
   station_name <- gsub("-", "_", station_name)
   station_name <- gsub("/", "_", station_name)
-  station_name <- gsub(".", "", station_name)
+  station_name <- gsub("\\.", "", station_name)
   station_name <- stringi::stri_trans_general(station_name, "Latin-ASCII")
   station_name <- str_to_title(station_name)
   station_name <- sprintf("%s_%s", station_name, station_id)
