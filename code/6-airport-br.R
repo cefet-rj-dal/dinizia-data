@@ -41,7 +41,14 @@ for (i in 1:nrow(airports)) {
   airport$station <- NULL
   airport$station_name <- NULL
   
-  save(airport, file=sprintf("br-airports/%s.rdata", station_name))
+  filename <- sprintf("br-airports/%s.rdata", station_name)
+  
+  if (nrow(airport) >= 365) {
+    save(airport, file=filename)
+  }
+  else 
+    file.remove(filename)
+  
   
   print(station_name)
 }
