@@ -26,18 +26,18 @@ validate_attributes <- function(data) {
 enrich_asos <- function(asos) {
   asos$station_date <- date(asos$valid)
   asos$station_hour <- hour(asos$valid)
+  asos$station_minute <- minute(asos$valid)
   
-  asos <- asos |> select(station, station_date, station_hour, valid, tmpf, dwpf, relh, drct, sknt, skyc1, alti, vsby, feel) |>
-    group_by(station, station_date, station_hour) |> 
-    summarise(valid = min(valid), air_temperature = max(tmpf), dew_point = max(dwpf), relative_humidity = max(relh),
-              wind_direction = max(drct), wind_speed = max(sknt), sky_coverage = max(skyc1),
-              pressure = max(alti), visibility = max(vsby), apparent_temperature = max(feel))
+  asos <- asos |> filter(station_minute == 0) |> 
+    select(station, station_date, station_hour, valid, 
+           air_temperature = tmpf, dew_point = dwpf, relative_humidity = relh, wind_direction = drct, 
+           wind_speed = sknt, sky_coverage = skyc1, pressure = alti, visibility = vsby, apparent_temperature = feel)
   
   asos$air_temperature <- (asos$air_temperature - 32) * 5/9
   asos$dew_point <- (asos$dew_point - 32) * 5/9
   asos$apparent_temperature <- (asos$apparent_temperature - 32) * 5/9
   
-  asos <- as_tibble(asos)  
+  asos <- as_tibble(asos)
   
   return(asos)
 }
