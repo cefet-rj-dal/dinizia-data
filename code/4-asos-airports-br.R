@@ -25,7 +25,6 @@ for (f in fil) {
   asos <- asos_airports(br_airports, asos)
   data <- rbind(data, asos)
 }
-save(data, file="data.rdata")
 
 dates <- data |> distinct(date, time) |> arrange(date, time)
 stations <- (data |> distinct(station, station_name) |> arrange(station_name))
