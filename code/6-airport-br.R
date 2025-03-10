@@ -5,6 +5,7 @@ library(stringi)
 library(stringr)
 
 asos_airports <- function(airports, asos) {
+  asos <- asos |> filter(!is.na(air_temperature))
   data <- merge(airports, asos, by.x = "stid", by.y = "station") |> arrange(stid, station_date, station_hour)
   colnames(data)[c(1,3,4)] <- c("station", "date", "time")
   data$lon <- NULL
