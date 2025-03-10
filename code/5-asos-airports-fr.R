@@ -78,6 +78,25 @@ dates <- data |> distinct(date, time) |> arrange(date, time)
 stations <- (data |> distinct(station, station_name) |> arrange(station_name))
 
 data_city <- process_attribute(stations, dates, data, "air_temperature")
-
 data_city <- fill_attribute(data_city, "air_temperature")
 
+data_city <- process_attribute(stations, dates, data, "dew_point")
+data_city <- fill_attribute(data_city, "dew_point")
+
+data_city <- process_attribute(stations, dates, data, "relative_humidity")
+data_city <- fill_attribute(data_city, "relative_humidity")
+
+data_city <- process_attribute(stations, dates, data, "wind_direction")
+data_city <- fill_attribute(data_city, "wind_direction")
+
+data_city <- process_attribute(stations, dates, data, "wind_speed")
+data_city <- fill_attribute(data_city, "wind_speed")
+
+data_city <- process_attribute(stations, dates, data, "pressure")
+data_city <- fill_attribute(data_city, "pressure")
+
+data_city <- process_attribute(stations, dates, data, "visibility")
+data_city <- fill_attribute(data_city, "visibility")
+
+data_city <- process_attribute(stations, dates, data, "apparent_temperature")
+data_city <- fill_attribute(data_city, "apparent_temperature")
