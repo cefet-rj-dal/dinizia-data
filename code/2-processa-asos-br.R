@@ -31,7 +31,7 @@ enrich_asos <- function(asos) {
   asos <- asos |> filter(station_minute == 0) |> 
     select(station, station_date, station_hour, valid, 
            air_temperature = tmpf, dew_point = dwpf, relative_humidity = relh, wind_direction = drct, 
-           wind_speed = sknt, sky_coverage = skyc1, pressure = alti, visibility = vsby, apparent_temperature = feel)
+           wind_speed = sknt, sky_coverage = skyc1, pressure = alti, visibility = vsby, apparent_temperature = feel) |> distinct()
   
   asos$air_temperature <- (asos$air_temperature - 32) * 5/9
   asos$dew_point <- (asos$dew_point - 32) * 5/9
