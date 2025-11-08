@@ -6,10 +6,14 @@ library(stringr)
 
 # Purpose: Build per-airport time series (FR) from merged ASOS data.
 # Inputs:
-#   - airports/fr-airports.rdata (object: fr_airports)
-#   - fr-asos-rdata/*.rdata (object: asos)
+#   - data/intermediate/airports/fr-airports.rdata
+#   - data/intermediate/asos/fr/*.rdata
 # Outputs:
-#   - fr-airports/<Station_Name_ID>.rdata (object: airport)
+#   - data/final/airports/fr/<Station_Name_ID>.rdata (object: airport)
+
+ensure_dir_for <- function(path) {
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+}
 
 asos_airports <- function(airports, asos) {
   asos <- asos |> filter(!is.na(air_temperature))
@@ -23,13 +27,15 @@ asos_airports <- function(airports, asos) {
   return(merged)
 }
 
-load("airports/fr-airports.rdata")
+airports_rdata_path <- "data/intermediate/airports/fr-airports.rdata"
+load(airports_rdata_path)
 airports <- fr_airports |> select(stid, station_name) |> arrange(station_name)
 
-input_files <- list.files("fr-asos-rdata")
+asos_intermediate_dir <- "data/intermediate/asos/fr"
+input_files <- list.files(asos_intermediate_dir)
 merged_data <- NULL
 for (file_name in input_files) {
-  rdata_path <- sprintf("fr-asos-rdata/%s", file_name)
+  rdata_path <- file.path(asos_intermediate_dir, file_name)
   print(rdata_path)
   load(rdata_path)
   asos <- asos_airports(airports, asos)
@@ -50,7 +56,8 @@ for (i in 1:nrow(airports)) {
   airport$station <- NULL
   airport$station_name <- NULL
 
-  filename <- sprintf("fr-airports/%s.rdata", station_name)
+  filename <- file.path("data/final/airports/fr", sprintf("%s.rdata", station_name))
+  ensure_dir_for(filename)
 
   if (nrow(airport) >= 365) {
     save(airport, file = filename)

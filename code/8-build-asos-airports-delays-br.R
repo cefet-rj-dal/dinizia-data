@@ -7,28 +7,35 @@ library(lubridate)
 
 # Purpose: Build BR-wide airport delay/flight matrices aligned to ASOS timeline.
 # Inputs:
-#   - br-asos-rdata/asos<year>.rdata (object: asos)
-#   - airports/br-airports.rdata (object: br_airports)
-#   - airports/airport_status.rdata (object: airport_status with flights/delays)
+#   - data/intermediate/asos/br/asos<year>.rdata
+#   - data/intermediate/airports/br-airports.rdata
+#   - data/source/airports/airport_status.rdata
 # Outputs:
-#   - asos-airports/br-{flights|delays|delay_perc}-raw.rdata
-#   - asos-airports/br-{flights|delays|delay_perc}.rdata (interpolated)
+#   - data/final/asos-airports/br-{flights|delays|delay_perc}-raw.rdata
+#   - data/final/asos-airports/br-{flights|delays|delay_perc}.rdata (interpolated)
+
+ensure_dir_for <- function(path) {
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+}
 
 # Build a reference timeline from all ASOS yearly indices
+asos_intermediate_dir <- "data/intermediate/asos/br"
 asos_index <- NULL
 for (i in 2000:2024) {
-  asos_path <- sprintf("br-asos-rdata/asos%d.rdata", i)
+  asos_path <- file.path(asos_intermediate_dir, sprintf("asos%d.rdata", i))
   load(asos_path)
   asos <- asos |> select(station, date = station_date, time = station_hour)
   asos_index <- rbind(asos_index, asos)
 }
 
-load("airports/br-airports.rdata")
+airports_rdata_path <- "data/intermediate/airports/br-airports.rdata"
+load(airports_rdata_path)
 stations_df <- br_airports |> select(station = stid, station_name) |> arrange(station_name, station)
 
 timestamps_df <- asos_index |> distinct(date, time) |> arrange(date, time)
 
-load("airports/airport_status.rdata")
+airport_status_path <- "data/source/airports/airport_status.rdata"
+load(airport_status_path)
 
 airport_status$delay_perc <- airport_status$delays / airport_status$flights
 
@@ -76,17 +83,24 @@ fill_attribute <- function(city_data) {
   return(city_data)
 }
 
+asos_final_dir <- "data/final/asos-airports"
 city_data <- city_data_flights
-save(city_data, file = "asos-airports/br-flights-raw.rdata")
+out_raw <- file.path(asos_final_dir, "br-flights-raw.rdata")
+ensure_dir_for(out_raw)
+save(city_data, file = out_raw)
 city_data <- fill_attribute(city_data)
-save(city_data, file = "asos-airports/br-flights.rdata")
+save(city_data, file = file.path(asos_final_dir, "br-flights.rdata"))
 
 city_data <- city_data_delays
-save(city_data, file = "asos-airports/br-delays-raw.rdata")
+out_raw <- file.path(asos_final_dir, "br-delays-raw.rdata")
+ensure_dir_for(out_raw)
+save(city_data, file = out_raw)
 city_data <- fill_attribute(city_data)
-save(city_data, file = "asos-airports/br-delays.rdata")
+save(city_data, file = file.path(asos_final_dir, "br-delays.rdata"))
 
 city_data <- city_data_delay_perc
-save(city_data, file = "asos-airports/br-delay_perc-raw.rdata")
+out_raw <- file.path(asos_final_dir, "br-delay_perc-raw.rdata")
+ensure_dir_for(out_raw)
+save(city_data, file = out_raw)
 city_data <- fill_attribute(city_data)
-save(city_data, file = "asos-airports/br-delay_perc.rdata")
+save(city_data, file = file.path(asos_final_dir, "br-delay_perc.rdata"))

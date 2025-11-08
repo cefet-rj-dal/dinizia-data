@@ -7,11 +7,19 @@ library(lubridate)
 
 # Purpose: Build FR-wide airport-by-time matrices for each ASOS attribute.
 # Inputs:
-#   - airports/fr-airports.rdata (object: fr_airports)
-#   - fr-asos-rdata/*.rdata (object: asos)
+#   - data/intermediate/airports/fr-airports.rdata
+#   - data/intermediate/asos/fr/*.rdata
 # Outputs:
-#   - asos-airports/fr-<attribute>-raw.rdata (wide matrix with NAs)
-#   - asos-airports/fr-<attribute>.rdata (wide matrix, NA-filled by interpolation)
+#   - data/final/asos-airports/fr-<attribute>-raw.rdata (wide matrix with NAs)
+#   - data/final/asos-airports/fr-<attribute>.rdata (wide matrix, NA-filled by interpolation)
+
+ensure_dir_for <- function(path) {
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+}
+
+airports_rdata_path <- "data/intermediate/airports/fr-airports.rdata"
+asos_intermediate_dir <- "data/intermediate/asos/fr"
+asos_final_dir <- "data/final/asos-airports"
 
 asos_airports <- function(airports, asos) {
   merged <- merge(airports, asos, by.x = "stid", by.y = "station") |>
@@ -56,7 +64,9 @@ process_attribute <- function(stations_df, timestamps_df, merged_data, attribute
       city_data[, station_name] <- filtered_data$value
     }
   }
-  save(city_data, file = sprintf("asos-airports/fr-%s-raw.rdata", attribute))
+  out_raw <- file.path(asos_final_dir, sprintf("fr-%s-raw.rdata", attribute))
+  ensure_dir_for(out_raw)
+  save(city_data, file = out_raw)
 
   return(city_data)
 }
@@ -73,18 +83,20 @@ fill_attribute <- function(city_data, attribute) {
     }
   }
 
-  save(city_data, file = sprintf("asos-airports/fr-%s.rdata", attribute))
+  out_final <- file.path(asos_final_dir, sprintf("fr-%s.rdata", attribute))
+  ensure_dir_for(out_final)
+  save(city_data, file = out_final)
 
   return(city_data)
 }
 
-load("airports/fr-airports.rdata")
+load(airports_rdata_path)
 fr_airports <- fr_airports |> select(stid, station_name)
 
-input_files <- list.files("fr-asos-rdata")
+input_files <- list.files(asos_intermediate_dir)
 merged_data <- NULL
 for (file_name in input_files) {
-  rdata_path <- sprintf("fr-asos-rdata/%s", file_name)
+  rdata_path <- file.path(asos_intermediate_dir, file_name)
   print(rdata_path)
   load(rdata_path)
   asos <- asos_airports(fr_airports, asos)

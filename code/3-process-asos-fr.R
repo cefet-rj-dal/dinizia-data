@@ -4,13 +4,20 @@ library(lubridate)
 library(dplyr)
 
 # Purpose: Process FR ASOS hourly data files into cleaned per-hour observations.
-# Inputs: zip/CSV files under 'fr-asos' (already unzipped or readable by readr)
-# Outputs: RData files under 'fr-asos-rdata' with object 'asos'
+# Inputs: zip/CSV files under 'data/source/asos/fr'
+# Outputs: RData files under 'data/intermediate/asos/fr' with object 'asos'
 # Notes:
 #   - Only keep on-the-hour records (minute == 0)
 #   - Convert imperial temperatures (F) to Celsius
 #   - Drop high-NA and unused columns
 #   - Source reference: https://mesonet.agron.iastate.edu/ASOS/
+
+ensure_dir_for <- function(path) {
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+}
+
+asos_source_dir <- "data/source/asos/fr"
+asos_intermediate_dir <- "data/intermediate/asos/fr"
 
 # Columns to remove prior to selecting final set
 columns_to_remove <- c(
@@ -58,12 +65,12 @@ enrich_asos <- function(asos) {
 }
 
 # Iterate over FR ASOS files and generate cleaned RData outputs
-input_files <- list.files("fr-asos")
+input_files <- list.files(asos_source_dir)
 processing_log <- NULL
 for (file_name in input_files) {
-  input_path <- sprintf("fr-asos/%s", file_name)
+  input_path <- file.path(asos_source_dir, file_name)
   print(input_path)
-  output_path <- sprintf("fr-asos-rdata/%s", str_replace(file_name, ".zip", ".rdata"))
+  output_path <- file.path(asos_intermediate_dir, str_replace(file_name, ".zip", ".rdata"))
   raw_data <- read_csv(input_path, col_types = cols(valid = col_character()))
   raw_data$valid <- strptime(raw_data$valid, "%Y-%m-%d %H:%M", tz = "GMT")
   na_stats <- validate_attributes(raw_data)
@@ -73,6 +80,7 @@ for (file_name in input_files) {
 
   asos <- enrich_asos(asos)
 
+  ensure_dir_for(output_path)
   save(asos, file = output_path)
   processing_log <- rbind(processing_log, data.frame(file = file_name, col = ncol(asos)))
 }
